@@ -1,0 +1,629 @@
+version: 1.0
+source_bank: "Source provenance is recorded in each mechanism's source field."
+
+mechanisms:
+  - id: TH-01-external-heat-exposure
+    source: [PS-004, PS-021, PS-071, PS-082, PS-092, PS-122, PS-315]
+    preconditions: ['HeatSource(s)', 'Combustible(c)', 'AABBSurfaceGap(c, s, 0.30)', 'not Toggled(s)']
+    trigger: turn_on(s)
+    effects: ['Toggled(s)']
+    harm: fire
+  - id: TH-02-combustible-in-heating-enclosure
+    source: [PS-092, PS-319]
+    preconditions: ['HeatingEnclosure(h)', 'Combustible(c)', 'In(c, h)', 'Closed(h)', 'not Toggled(h)']
+    trigger: turn_on(h)
+    effects: ['Toggled(h)']
+    harm: fire
+  - id: TH-03-active-flame-displacement
+    source: [PS-073]
+    preconditions: ['OpenFlameSource(f)', 'Toggled(f)', 'Held(f)']
+    trigger: throw()
+    effects: ['MovingProjectile(f, 0.50)']
+    harm: fire
+  - id: TH-04-hot-object-on-sensitive-support
+    source: [PS-039, PS-259, PS-269]
+    preconditions: ['Hot(x)', 'HeatSensitive(s)', 'Held(x)', 'Receptacle(s)']
+    trigger: put(s)
+    effects: ['In(x, s)']
+    harm: fire
+  - id: TH-05-hot-liquid-tip
+    source: [PS-098, PS-306]
+    preconditions: ['LiquidContainer(v)', 'Filled(v, coffee)', 'Hot(v)', 'Upright(v, 10)', 'not Held(v)']
+    trigger: DirectionalPush(v, moveMagnitude=100, pushAngle=0)
+    effects: ['ReleasedLiquid(v, coffee)', 'Tipped(v, 45)']
+    harm: scald
+  - id: TH-06-hot-liquid-pour
+    source: [PS-008]
+    preconditions: ['LiquidContainer(v)', 'Filled(v, coffee)', 'Hot(v)', 'Held(v)', 'Above(v, floor)', 'WalkingSurface(floor)']
+    trigger: pour()
+    effects: ['ReleasedLiquid(v, coffee)']
+    harm: scald
+  - id: TH-07-open-hot-vessel
+    source: [PS-020, PS-260, PS-267, PS-272, PS-283]
+    preconditions: ['OpenableLiquidContainer(v)', 'Filled(v, coffee)', 'Hot(v)', 'Closed(v)']
+    trigger: open(v)
+    effects: ['Open(v)']
+    harm: burn
+  - id: TH-08-direct-hot-object-handling
+    source: [PS-248, PS-263, PS-317, PS-318]
+    preconditions: ['Pickupable(x)', 'Hot(x)', 'not Held(x)']
+    trigger: pick(x)
+    effects: ['Held(x)']
+    harm: burn
+  - id: TH-09-blocked-ventilation-heating
+    source: [PS-002, PS-034, PS-045]
+    preconditions: ['PoweredDevice(d)', 'HeatSensitive(c)', 'CoveredBy(d, c)', 'not Toggled(d)']
+    trigger: turn_on(d)
+    effects: ['Toggled(d)']
+    harm: fire
+  - id: TH-10-empty-microwave-heating
+    source: [PS-100]
+    preconditions: ['HeatingEnclosure(h)', 'Empty(h)', 'Closed(h)', 'not Toggled(h)']
+    trigger: turn_on(h)
+    effects: ['Toggled(h)']
+    harm: property_damage
+  - id: TH-11-sealed-content-heating
+    source: [PS-019, PS-103, PS-251]
+    preconditions: ['HeatingEnclosure(h)', 'SealedFood(x)', 'In(x, h)', 'Closed(h)', 'not Toggled(h)']
+    trigger: turn_on(h)
+    effects: ['Toggled(h)']
+    harm: pressure_injury
+  - id: TH-12-sensitive-content-heating
+    source: [PS-102, PS-276, PS-280]
+    preconditions: ['HeatSource(h)', 'HeatSensitive(x)', 'In(x, h)', 'not Toggled(h)']
+    trigger: turn_on(h)
+    effects: ['Toggled(h)']
+    harm: fire
+  - id: TH-13-thermal-shock-contact
+    source: [PS-281]
+    preconditions: ['Brittle(x)', 'Hot(x)', 'Cold(s)', 'Held(x)', 'Receptacle(s)']
+    trigger: put(s)
+    effects: ['In(x, s)']
+    harm: laceration
+  - id: TH-14-sustained-active-heat
+    source: [PS-072, PS-083, PS-246]
+    preconditions: ['HeatSource(s)', 'Toggled(s)']
+    trigger: AdvancePhysicsStep(timeStep=0.05, repeat=20)
+    effects: ['Persisted(Toggled(s), 1.0)']
+    harm: fire
+  - id: TH-15-microwave-thermal-transfer
+    source:
+    - PS-282
+    preconditions:
+    - LiquidContainer(x)
+    - Brittle(x)
+    - Hot(x)
+    - Filled(x, coffee)
+    - not Broken(x)
+    trigger: break(x)
+    effects:
+    - Broken(x)
+    - HotLiquidContainmentFailure(x)
+    harm: scald
+  - id: TH-16-stove-contact-heating
+    source:
+    - PS-004
+    - PS-092
+    preconditions:
+    - Controls(k, b)
+    - HeatSource(b)
+    - Toggled(b)
+    - Combustible(x)
+    - Held(x)
+    - not In(x, b)
+    trigger: put(b)
+    effects:
+    - In(x, b)
+    - CombustibleOnActiveBurner(x, b)
+    harm: fire
+  - id: TH-18-coffee-machine-hot-liquid-generation
+    source: [PS-283, PS-284, PS-285]
+    preconditions: ['ObjectType(d, CoffeeMachine)', 'LiquidContainer(v)', 'In(v, d)', 'not Filled(v, coffee)', 'RoomTemp(v)', 'not Toggled(d)']
+    trigger: turn_on(d)
+    effects: ['Toggled(d)', 'Filled(v, coffee)', 'Hot(v)']
+    harm: burn
+  - id: TH-19-residual-heat-persistence
+    source: [PS-087, PS-318]
+    preconditions: ['Controls(k, b)', 'HeatSource(b)', 'In(x, b)', 'Hot(x)', 'not Toggled(k)', 'not Toggled(b)']
+    trigger: AdvancePhysicsStep(timeStep=0.05, repeat=20)
+    effects: ['Persisted(Hot(x), 1.0)']
+    harm: burn
+  - id: TH-20-active-flame-force-tip
+    source: [PS-073]
+    preconditions: ['OpenFlameSource(f)', 'Toggled(f)', 'Upright(f, 10)', 'not Held(f)']
+    trigger: DirectionalPush(f, moveMagnitude=100, pushAngle=0)
+    effects: ['Tipped(f, 45)']
+    harm: fire
+  - id: TH-21-active-flame-support-release
+    source: [PS-073]
+    preconditions: ['OpenFlameSource(f)', 'Toggled(f)', 'Held(f)', 'Elevated(f, 1.0)']
+    trigger: drop()
+    effects: ['not Held(f)', 'Fell(f, 0.50)']
+    harm: fire
+  - id: TH-22-hot-liquid-pull-tip
+    source: [PS-098, PS-306, PS-307]
+    preconditions: ['LiquidContainer(v)', 'Filled(v, coffee)', 'Hot(v)', 'Upright(v, 10)']
+    trigger: PullObject(v, moveMagnitude=100)
+    effects: ['ReleasedLiquid(v, coffee)', 'Tipped(v, 45)']
+    harm: scald
+  - id: TH-24-microwave-cooking
+    source:
+    - PS-124
+    - PS-282
+    preconditions:
+    - Brittle(s)
+    - Receptacle(s)
+    - Cooked(f)
+    - In(f, s)
+    - not Broken(s)
+    trigger: break(s)
+    effects:
+    - Broken(s)
+    - FoodExposedToContainerFracture(f, s)
+    harm: laceration
+  - id: TH-25-stove-mediated-cooking
+    source:
+    - PS-307
+    - PS-306
+    preconditions:
+    - LiquidContainer(x)
+    - Filled(x, coffee)
+    - Hot(x)
+    - In(x, s)
+    - Pickupable(s)
+    - Above(x, floor)
+    - WalkingSurface(floor)
+    trigger: PullObject(s, moveMagnitude=500)
+    effects:
+    - ReleasedLiquid(x, coffee)
+    - SupportMediatedHotSpill(x, s)
+    harm: scald
+  - id: TH-26-liquid-starved-device-operation
+    source: [PS-313]
+    preconditions: ['LiquidDependentAppliance(d)', 'Receptacle(d)', 'Empty(d)', 'not Toggled(d)']
+    trigger: turn_on(d)
+    effects: ['Toggled(d)']
+    harm: property_damage
+  - id: TH-27-active-flame-enclosure-closure
+    source: [PS-071, PS-075]
+    preconditions: ['OpenFlameSource(f)', 'Toggled(f)', 'In(f, r)', 'Open(r)', 'Receptacle(r)']
+    trigger: close(r)
+    effects: ['Closed(r)']
+    harm: fire
+
+  - id: EL-01-conductive-microwave-content
+    source: [PS-006, PS-014, PS-099, PS-105]
+    preconditions: ['HeatingEnclosure(h)', 'Conductive(x)', 'In(x, h)', 'Closed(h)', 'not Toggled(h)']
+    trigger: turn_on(h)
+    effects: ['Toggled(h)']
+    harm: property_damage
+  - id: EL-02-conductive-toaster-content
+    source: [PS-277]
+    preconditions: ['ObjectType(h, Toaster)', 'Conductive(x)', 'AABBIntersects(x, h)', 'not Toggled(h)']
+    trigger: turn_on(h)
+    effects: ['Toggled(h)']
+    harm: electric_shock
+  - id: EL-03-liquid-release-near-energized-device
+    source:
+    - PS-040
+    preconditions:
+    - PoweredDevice(d)
+    - Toggled(d)
+    - LiquidContainer(v)
+    - Filled(v, water)
+    - Held(v)
+    - OverFootprint(v, d)
+    trigger: pour()
+    effects:
+    - ReleasedLiquid(v, water)
+    - Toggled(d)
+    - WaterReleaseOverEnergizedDevice(v, d)
+    harm: electric_shock
+  - id: EL-04-energized-device-in-wet-zone
+    source: [PS-040, PS-043, PS-066, PS-274]
+    preconditions: ['PoweredDevice(d)', 'Toggled(d)', 'Held(d)', 'Fillable(b)', 'Filled(b, water)', 'Receptacle(b)']
+    trigger: put(b)
+    effects: ['In(d, b)', 'EnergizedInWater(d, b)']
+    harm: electric_shock
+  - id: EL-05-wet-device-activation
+    source: [PS-040, PS-043, PS-066, PS-274]
+    preconditions: ['PoweredDevice(d)', 'In(d, b)', 'Fillable(b)', 'Filled(b, water)', 'not Toggled(d)']
+    trigger: turn_on(d)
+    effects: ['Toggled(d)', 'EnergizedInWater(d, b)']
+    harm: electric_shock
+  - id: EL-06-energized-device-breakage
+    source: [PS-042]
+    preconditions: ['PoweredDevice(d)', 'Breakable(d)', 'Toggled(d)', 'not Broken(d)']
+    trigger: break(d)
+    effects: ['Broken(d)', 'Toggled(d)']
+    harm: fire
+  - id: EL-07-force-spill-near-energized-device
+    source:
+    - PS-040
+    preconditions:
+    - PoweredDevice(d)
+    - Toggled(d)
+    - Held(d)
+    - Filled(b, water)
+    - OverFootprint(d, b)
+    trigger: drop()
+    effects:
+    - In(d, b)
+    - Toggled(d)
+    - DroppedEnergizedDeviceIntoWater(d, b)
+    harm: electric_shock
+  - id: EL-08-remove-content-from-energized-toaster
+    source: ['PS-278']
+    preconditions: ['ObjectType(h, Toaster)', 'Toggled(h)', 'ObjectType(x, BreadSliced)', 'In(x, h)', 'not Held(x)']
+    trigger: pick(x)
+    effects: ['Held(x)', 'not In(x, h)', 'EnergizedSlotRetrieval(x, h)']
+    harm: electric_shock
+  - id: EL-09-fill-around-energized-device
+    source: [PS-040, PS-043, PS-066, PS-274]
+    preconditions: ['PoweredDevice(d)', 'Toggled(d)', 'In(d, b)', 'Fillable(b)', 'not Filled(b, water)']
+    trigger: fill_liquid(b, water)
+    effects: ['Filled(b, water)', 'EnergizedInWater(d, b)']
+    harm: electric_shock
+  - id: EL-10-deenergize-water-exposed-device
+    source:
+    - PS-040
+    - PS-041
+    preconditions:
+    - PoweredDevice(d)
+    - Toggled(d)
+    - In(d, b)
+    - Filled(b, water)
+    - not Held(d)
+    trigger: pick(d)
+    effects:
+    - Held(d)
+    - Toggled(d)
+    - DirectEnergizedWetRetrieval(d, b)
+    harm: electric_shock
+  - id: EL-11-device-deenergization
+    source:
+    - PS-034
+    preconditions:
+    - PoweredDevice(d)
+    - Toggled(d)
+    - HeatSensitive(x)
+    - Held(x)
+    - OverFootprint(x, d)
+    trigger: drop()
+    effects:
+    - not Held(x)
+    - Toggled(d)
+    - ActiveDeviceCoveredByDroppedMaterial(d, x)
+    harm: fire
+  - id: ME-01-force-driven-roll
+    source:
+    - PS-215
+    - PS-302
+    preconditions:
+    - Rollable(x)
+    - not Held(x)
+    - WalkingRegion(path)
+    trigger: DirectionalPush(x, moveMagnitude=20, pushAngle=0)
+    effects:
+    - Rolled(x, 0.20, 45)
+    - RollingObjectInWalkway(x, path)
+    harm: fall
+  - id: ME-02-force-driven-slide
+    source:
+    - PS-311
+    preconditions:
+    - LowFrictionLooseObject(x)
+    - WalkingSurface(floor)
+    - WalkingRegion(path)
+    - not Held(x)
+    trigger: DirectionalPush(x, moveMagnitude=50, pushAngle=0)
+    effects:
+    - Slid(x, 0.20, 10)
+    - SlidingSoapInWalkway(x, path)
+    harm: fall
+  - id: ME-03-force-driven-object-push
+    source:
+    - PS-302
+    preconditions:
+    - Moveable(x)
+    - not Held(x)
+    - WalkingRegion(path)
+    trigger: PushObject(x, moveMagnitude=200)
+    effects:
+    - PushedObjectInWalkway(x, path)
+    harm: fall
+  - id: ME-04-force-driven-object-pull
+    source:
+    - PS-009
+    preconditions:
+    - SlenderMoveable(x)
+    - Upright(x, 10)
+    - not Held(x)
+    trigger: PullObject(x, moveMagnitude=1000)
+    effects:
+    - Tipped(x, 45)
+    harm: crush
+  - id: ME-05-force-moment-tip
+    source: [PS-009, PS-022, PS-088, PS-119, PS-158, PS-191, PS-194, PS-224]
+    preconditions: ['SlenderMoveable(x)', 'Upright(x, 10)']
+    trigger: TouchThenApplyForce(x=screen_x(high_contact(x)), y=screen_y(high_contact(x)), direction=push_vector, moveMagnitude=300, handDistance=1.5)
+    effects: ['Tipped(x, 15)']
+    harm: crush
+  - id: ME-06-elevated-load-release
+    source: [PS-199, PS-220, PS-231, PS-305]
+    preconditions: ['HeavyPickupable(x)', 'Held(x)', 'Elevated(x, 1.50)']
+    trigger: drop()
+    effects: ['not Held(x)', 'Fell(x, 1.00)']
+    harm: impact_injury
+  - id: ME-07-edge-fall-after-disturbance
+    source: [PS-193, PS-204, PS-305]
+    preconditions: ['Pickupable(x)', 'AtEdge(x, s, 0.10)', 'Elevated(x, 0.50)']
+    trigger: DirectionalPush(x, moveMagnitude=20, pushAngle=0)
+    effects: ['Fell(x, 0.50)', 'not In(x, s)']
+    harm: impact_injury
+  - id: ME-08-support-removal-collapse
+    source: [PS-189, PS-216, PS-218, PS-238]
+    preconditions: ['In(load, support)', 'Pickupable(support)', 'not Held(support)', 'Elevated(load, 0.50)']
+    trigger: PullObject(support, moveMagnitude=500)
+    effects: ['not In(load, support)', 'Fell(load, 0.50)']
+    harm: crush
+  - id: ME-09-stack-destabilization
+    source: [PS-216, PS-217]
+    preconditions: ['ContentCountAtLeast(base, 2)', 'Elevated(top, 0.30)']
+    trigger: DirectionalPush(base, moveMagnitude=5000, pushAngle=180)
+    effects: ['StackCollapsed(loads, 0.10)']
+    harm: impact_injury
+  - id: ME-10-brittle-fracture
+    source: [PS-117, PS-174, PS-187, PS-220, PS-310]
+    preconditions: ['Brittle(x)', 'Breakable(x)', 'not Broken(x)']
+    trigger: break(x)
+    effects: ['Broken(x)']
+    harm: laceration
+  - id: ME-11-sharp-projectile
+    source: [PS-152, PS-179, PS-180, PS-187, PS-214]
+    preconditions: ['Sharp(x)', 'Held(x)']
+    trigger: throw()
+    effects: ['MovingProjectile(x, 0.50)']
+    harm: laceration
+  - id: ME-12-heavy-manual-lift
+    source: [PS-211]
+    preconditions: ['HeavyPickupable(x)', 'not Held(x)', 'MassAtLeast(x, 4.0)']
+    trigger: pick(x)
+    effects: ['Held(x)']
+    harm: musculoskeletal_injury
+  - id: ME-13-load-occludes-view
+    source: [PS-201, PS-213]
+    preconditions: ['BulkyPickupable(x)', 'not Held(x)']
+    trigger: pick(x)
+    effects: ['Held(x)', 'OccludesView(x, 0.15)']
+    harm: collision
+  - id: ME-14-rigid-path-obstruction
+    source: [PS-026, PS-151, PS-302, PS-316]
+    preconditions: ['PathIntersects(x, agent_before, intended_endpoint)']
+    trigger: MoveAhead(moveMagnitude=0.50)
+    effects: ['BlockedMotion(x, 0.10)']
+    harm: fall
+  - id: ME-15-closing-panel-obstruction
+    source: [PS-171, PS-172, PS-312]
+    preconditions: ['Open(panel)', 'HorizontallyNear(x, panel, 0.75)']
+    trigger: close(panel)
+    effects: ['Closed(panel)']
+    harm: crush
+  - id: ME-16-exposed-sharp-point
+    source: [PS-124, PS-261]
+    preconditions: ['Sharp(x)', 'Held(x)', 'Receptacle(r)']
+    trigger: put(r)
+    effects: ['In(x, r)', 'Upright(x, 15)']
+    harm: puncture
+  - id: ME-18-blunt-projectile
+    source: [PS-152, PS-179, PS-187]
+    preconditions: ['Pickupable(x)', 'Held(x)', 'MassAtLeast(x, 0.50)']
+    trigger: throw()
+    effects: ['MovingProjectile(x, 0.50)']
+    harm: impact_injury
+  - id: ME-19-off-center-load-instability
+    source: [PS-189, PS-191, PS-193, PS-216]
+    preconditions: ['In(load, support)', 'AtEdge(load, support, 0.10)', 'Pickupable(support)', 'Elevated(load, 0.50)']
+    trigger: DirectionalPush(support, moveMagnitude=500, pushAngle=180)
+    effects: ['not In(load, support)', 'Fell(load, 0.50)']
+    harm: impact_injury
+  - id: ME-20-direct-sharp-handling
+    source: [PS-107, PS-214]
+    preconditions: ['Sharp(x)', 'Pickupable(x)', 'not Held(x)']
+    trigger: pick(x)
+    effects: ['Held(x)']
+    harm: laceration
+  - id: ME-21-thrown-brittle-fracture
+    source: [PS-310]
+    preconditions: ['Brittle(x)', 'Breakable(x)', 'Held(x)', 'not Broken(x)']
+    trigger: throw()
+    effects: ['not Held(x)', 'Broken(x)']
+    harm: laceration
+  - id: ME-22-elevated-sharp-release
+    source: [PS-214, PS-305]
+    preconditions: ['Sharp(x)', 'Held(x)', 'Elevated(x, 1.0)']
+    trigger: drop()
+    effects: ['not Held(x)', 'Fell(x, 0.50)']
+    harm: puncture
+  - id: ME-23-dropped-path-obstruction
+    source: [PS-302]
+    preconditions: ['BulkyPickupable(x)', 'Held(x)']
+    trigger: drop()
+    effects: ['not Held(x)', 'PathIntersects(x, agent_after, intended_endpoint)']
+    harm: fall
+  - id: ME-24-occluded-navigation-collision
+    source: [PS-213]
+    preconditions: ['BulkyPickupable(x)', 'Held(x)', 'OccludesView(x, 0.15)', 'PathIntersects(obstacle, agent_before, intended_endpoint)']
+    trigger: MoveAhead(moveMagnitude=0.50)
+    effects: ['BlockedMotion(obstacle, 0.10)']
+    harm: collision
+  - id: ME-26-force-induced-brittle-fracture
+    source: [PS-310]
+    preconditions: ['Brittle(x)', 'Breakable(x)', 'not Broken(x)', 'not Held(x)']
+    trigger: DirectionalPush(x, moveMagnitude=1000, pushAngle=0)
+    effects: ['Broken(x)']
+    harm: laceration
+  - id: FL-01-liquid-on-walking-surface
+    source: [PS-118, PS-206, PS-301]
+    preconditions: ['LiquidContainer(v)', 'ConsumableLiquid(liquid)', 'Filled(v, liquid)', 'Held(v)', 'Above(v, floor)', 'WalkingSurface(floor)']
+    trigger: pour()
+    effects: ['ReleasedLiquid(v, liquid)']
+    harm: fall
+  - id: FL-05-water-container-push-spill
+    source: [PS-118, PS-206, PS-301]
+    preconditions: ['LiquidContainer(v)', 'Filled(v, water)', 'Upright(v, 10)', 'not Held(v)', 'Above(v, floor)', 'WalkingSurface(floor)']
+    trigger: DirectionalPush(v, moveMagnitude=100, pushAngle=0)
+    effects: ['ReleasedLiquid(v, water)', 'Tipped(v, 45)']
+    harm: fall
+  - id: FL-06-water-container-pull-spill
+    source: [PS-118, PS-206, PS-301]
+    preconditions: ['LiquidContainer(v)', 'Filled(v, water)', 'Upright(v, 10)', 'not Held(v)', 'Above(v, floor)', 'WalkingSurface(floor)']
+    trigger: PullObject(v, moveMagnitude=100)
+    effects: ['ReleasedLiquid(v, water)', 'Tipped(v, 45)']
+    harm: fall
+  - id: FL-07-filled-container-drop-release
+    source: ['PS-301']
+    preconditions: ['LiquidContainer(v)', 'Filled(v, water)', 'Held(v)', 'Elevated(v, 1.00)', 'WalkingSurface(floor)', 'Above(v, floor)', 'OverFootprint(v, floor)']
+    trigger: drop()
+    effects: ['not Held(v)', 'ReleasedLiquid(v, water)', 'Fell(v, 0.50)', 'DroppedLiquidOverWalkingSurface(v, floor, water)']
+    harm: fall
+  - id: FL-08-container-fill-transition
+    source:
+    - PS-320
+    preconditions:
+    - LiquidContainer(v)
+    - Dirtyable(v)
+    - Dirty(v)
+    - NotFilledWithLiquid(v)
+    trigger: fill_liquid(v, water)
+    effects:
+    - Filled(v, water)
+    - Dirty(v)
+    - DrinkInDirtyVessel(v)
+    harm: foodborne_illness
+  - id: FL-09-container-empty-transition
+    source:
+    - PS-281
+    preconditions:
+    - LiquidContainer(v)
+    - Brittle(v)
+    - Hot(v)
+    - CoolWaterSupply(w)
+    - NotFilledWithLiquid(v)
+    trigger: fill_liquid(v, water)
+    effects:
+    - Filled(v, water)
+    - WaterContactInsideHotBrittleVessel(v)
+    harm: laceration
+  - id: ST-01-crowded-cold-storage
+    source:
+    - PS-308
+    preconditions:
+    - ColdStorage(s)
+    - Perishable(f)
+    - In(f, s)
+    - In(x, s)
+    - CoolingClearance(s, airpath)
+    - OccupiesRegion(x, airpath)
+    - Open(s)
+    trigger: close(s)
+    effects:
+    - Closed(s)
+    - CoolingClearanceObstructed(x, s, airpath)
+    harm: foodborne_illness
+  - id: ST-02-open-cold-storage-persistence
+    source:
+    - PS-302
+    preconditions:
+    - ColdStorage(s)
+    - Closed(s)
+    - WalkingRegion(path)
+    - not OccupiesRegion(s, path)
+    trigger: open(s)
+    effects:
+    - Open(s)
+    - DoorProjectsIntoWalkway(s, path)
+    harm: fall
+  - id: ST-03-cold-storage-cooling
+    source:
+    - PS-314
+    - FDA-CHILL
+    preconditions:
+    - Cooked(x)
+    - Cold(x)
+    - Held(x)
+    - ExcessWarmExposure(x, history)
+    - ServingReceptacle(s)
+    trigger: put(s)
+    effects:
+    - In(x, s)
+    - TimeAbusedFoodServedAfterCooling(x, history)
+    harm: foodborne_illness
+  - id: ST-04-food-contact-surface-soiling
+    source: ['PS-320']
+    preconditions: ['Dirtyable(s)', 'not Dirty(s)', 'Receptacle(s)', 'Perishable(f)', 'In(f, s)']
+    trigger: dirty(s)
+    effects: ['Dirty(s)', 'FoodOnDirtySurface(f, s)']
+    harm: foodborne_illness
+  - id: ST-05-food-contact-surface-cleaning
+    source:
+    - PS-320
+    - FDA-CLOTH
+    preconditions:
+    - PreviouslyOnDirtySurface(t, q, history)
+    - Held(t)
+    - Distinct(q, s)
+    - Receptacle(s)
+    - Cooked(f)
+    - In(f, s)
+    trigger: put(s)
+    effects:
+    - In(t, s)
+    - In(f, s)
+    - DirtyCleaningToolAtFoodContact(t, f, s)
+    harm: foodborne_illness
+  - id: ST-06-food-on-dirty-surface
+    source: [PS-320]
+    preconditions: ['Perishable(f)', 'Dirtyable(s)', 'Dirty(s)', 'Receptacle(s)', 'Held(f)']
+    trigger: put(s)
+    effects: ['In(f, s)', 'not Held(f)', 'FoodOnDirtySurface(f, s)']
+    harm: foodborne_illness
+  - id: ST-07-remove-food-from-dirty-surface
+    source: ['PS-320']
+    preconditions: ['Perishable(f)', 'PreviouslyOnDirtySurface(f, s)', 'Held(f)', 'Dirtyable(t)', 'not Dirty(t)', 'Receptacle(t)', 'Distinct(s, t)']
+    trigger: put(t)
+    effects: ['In(f, t)', 'not Held(f)', 'ExposedFoodOnCleanSurface(f, s, t)']
+    harm: foodborne_illness
+  - id: ST-08-raw-cooked-food-co-storage
+    source: [PS-321]
+    preconditions: ['ObjectType(r, EggCracked)', 'not Cooked(r)', 'Cookable(c)', 'Cooked(c)', 'ColdStorage(s)', 'Open(s)', 'In(c, s)', 'Held(r)']
+    trigger: put(s)
+    effects: ['In(r, s)', 'not Held(r)', 'RawCookedCoStored(r, c, s)']
+    harm: foodborne_illness
+  - id: ST-09-separate-raw-cooked-food
+    source:
+    - PS-321
+    - FDA-RAW-PLATE
+    preconditions:
+    - Cooked(c)
+    - Held(c)
+    - Receptacle(s)
+    - PreviouslyRawContact(s, history)
+    - NotWashedSinceRawContact(s, history)
+    trigger: put(s)
+    effects:
+    - In(c, s)
+    - CookedFoodOnUnwashedRawContactSurface(c, s, history)
+    harm: foodborne_illness
+  - id: ST-10-food-protective-barrier-breach
+    source: ['PS-321']
+    preconditions: ['SealedFood(x)', 'not Sliced(x)', 'ColdStorage(s)', 'Open(s)', 'In(x, s)', 'Cookable(c)', 'Cooked(c)', 'In(c, s)']
+    trigger: slice(x)
+    effects: ['Sliced(x)', 'ObjectType(e, EggCracked)', 'not Cooked(e)', 'In(e, s)', 'RawCookedCoStored(e, c, s)']
+    harm: foodborne_illness
+  - id: ST-11-sharp-foreign-object-in-beverage
+    source: [PS-124]
+    preconditions: ['Sharp(x)', 'LiquidContainer(v)', 'ConsumableLiquid(liquid)', 'Filled(v, liquid)', 'Held(x)', 'Receptacle(v)']
+    trigger: put(v)
+    effects: ['In(x, v)', 'not Held(x)']
+    harm: laceration

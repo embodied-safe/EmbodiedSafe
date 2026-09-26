@@ -1,0 +1,80 @@
+version: 1.0
+simulator: AI2-THOR 5.0.0
+interface_implementation: "EmbodiedSafe low-level action interface."
+usage: Mechanisms use an interface name when the agent can issue it, otherwise the native AI2-THOR name.
+
+step3_agent_extensions:
+  implementation: "Reference implementation not included in this anonymous release."
+  runner: "Reference runner not included in this anonymous release."
+  documentation: "Reference documentation not included in this anonymous release."
+  wire_format: 'ActionName {"parameter": "value"}; literal function-call syntax is also accepted.'
+  actions:
+    - {name: DirectionalPush, params: [object, objectId, moveMagnitude, pushAngle, forceAction]}
+    - {name: PushObject, params: [object, objectId, moveMagnitude, forceAction]}
+    - {name: PullObject, params: [object, objectId, moveMagnitude, forceAction]}
+    - {name: TouchThenApplyForce, params: [x, y, direction, moveMagnitude, handDistance]}
+    - {name: MoveHeldObject, params: [ahead, right, up, forceVisible]}
+    - {name: MoveHeldObjectAhead, params: [moveMagnitude, forceVisible]}
+    - {name: MoveHeldObjectUp, params: [moveMagnitude, forceVisible]}
+    - {name: MoveAhead, params: [moveMagnitude]}
+    - {name: AdvancePhysicsStep, params: [timeStep, repeat]}
+    - {name: Pass, params: []}
+    - {name: wait, params: [seconds]}
+    - {name: place, params: [receptacle, region, position, rotation]}
+  constraints:
+    object_resolution: Provide exactly one object (type/index or binding) or objectId for object-directed forces.
+    physics_clock: AdvancePhysicsStep and wait manage pause/unpause internally; repeat is expanded by the adapter.
+    force_observation: Force actions include eight Pass updates for settling; these do not promise a fixed simulated duration.
+    place: Requires a held object and a nearby visible open receptacle; position must match a valid placement point. Peripheral placement does not guarantee the AtEdge predicate.
+    setup: Direct TeleportFull, TeleportObject and unrestricted PlaceObjectAtPoint remain initialization-only controls.
+
+current_interface:
+  - {name: find, native: [GetReachablePositions, TeleportFull, MoveAhead, MoveBack, MoveLeft, MoveRight, RotateLeft, RotateRight, LookUp, LookDown]}
+  - {name: pick, native: [PickupObject]}
+  - {name: put, native: [PutObject, PlaceObjectAtPoint]}
+  - {name: open, native: [OpenObject]}
+  - {name: close, native: [CloseObject]}
+  - {name: slice, native: [SliceObject]}
+  - {name: turn_on, native: [ToggleObjectOn]}
+  - {name: turn_off, native: [ToggleObjectOff]}
+  - {name: drop, native: [DropHandObject], defaults: {forceAction: true}}
+  - {name: throw, native: [ThrowObject], defaults: {moveMagnitude: 1500.0, forceAction: true}}
+  - {name: break, native: [BreakObject]}
+  - {name: pour, native: [RotateHeldObject], policy: rotate until isFilledWithLiquid becomes false}
+  - {name: cook, native: [CookObject]}
+  - {name: dirty, native: [DirtyObject]}
+  - {name: clean, native: [CleanObject]}
+  - {name: fill_liquid, native: [FillObjectWithLiquid]}
+  - {name: empty_liquid, native: [EmptyLiquidFromObject]}
+
+native_extensions:
+  - {name: DirectionalPush, params: [objectId, moveMagnitude, pushAngle, forceAction]}
+  - {name: PushObject, params: [objectId, moveMagnitude, forceAction]}
+  - {name: PullObject, params: [objectId, moveMagnitude, forceAction]}
+  - {name: TouchThenApplyForce, params: [x, y, direction, moveMagnitude, handDistance]}
+  - {name: MoveHeldObject, params: [ahead, right, up, forceVisible]}
+  - {name: MoveHeldObjectAhead, params: [moveMagnitude, forceVisible]}
+  - {name: MoveHeldObjectUp, params: [moveMagnitude, forceVisible]}
+  - {name: PausePhysicsAutoSim, params: []}
+  - {name: AdvancePhysicsStep, params: [timeStep]}
+  - {name: Pass, params: []}
+  - {name: UnpausePhysicsAutoSim, params: []}
+
+setup_only:
+  - {name: PlaceObjectAtPoint, params: [objectId, position, rotation, forceKinematic]}
+  - {name: TeleportObject, params: [objectId, position, rotation, forceAction, forceKinematic, allowTeleportOutOfHand]}
+  - {name: TeleportFull, params: [x, y, z, rotation, horizon, standing]}
+
+constraints:
+  AdvancePhysicsStep.timeStep: 0.0 < timeStep <= 0.05
+  repeat: Compiler multiplicity; it is never passed to the simulator as an action parameter.
+  repeat_until: Evaluator loop over a native action until its declared predicate becomes true or timeout is reached.
+  symbolic_arguments: Role variables and geometry expressions are resolved to native parameters before replay.
+  note: Setup-only controls may initialize an instance but never count as the violating trigger.
+
+validation:
+  method: Real AI2-THOR replay through LowLevelPlanner.llm_skill_interact
+  date: 2026-09-03
+  verified_actions: 17
+  repetitions_per_action: 3
+  status: 51 of 51 passed
