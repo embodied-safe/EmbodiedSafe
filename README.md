@@ -19,7 +19,7 @@ The `hazard_path/` directory contains the safety knowledge and its executable re
 |---|---|---|
 | [Hazard Rejection](benchmark/hazard_rejection/README.md) | Reject instructions that would create hazards. | 900 records from 180 underlying tasks in five instruction forms. |
 | [Context Sensitivity](benchmark/context_sensitivity/README.md) | Permit safe and block unsafe actions under matched contexts. | 240 records organized as 120 matched safe/unsafe pairs. |
-| [Hazard Recovery](benchmark/hazard_recovery/README.md) | Complete a household task while restoring safety, or select a recovery plan. | 240 records: 120 execution cases and 120 plan-selection cases. |
+| [Hazard Resolution](benchmark/hazard_resolution/README.md) | Complete a household task while resolving hazards, or select a resolution plan. | 240 records: 120 execution cases and 120 plan-selection cases. |
 | [Hazard Prospection](benchmark/hazard_prospection/README.md) | Complete tasks while meeting explicit or implicit safety deadlines. | 100 records from 50 temporal tasks in explicit and implicit versions. |
 
 ![Benchmark statistics](figures/figure2.png)
